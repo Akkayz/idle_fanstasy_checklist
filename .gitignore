@@ -1,0 +1,31 @@
+# Antigravity & AI Agent configurations
+.agents/
+.gemini/
+
+# Operating System Temporary & Metadata Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Thumbs.db:encryptable
+desktop.ini
+
+# Logs & Debugging
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Runtime / Editor caches
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.cache/
+tmp/
+temp/

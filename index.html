@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IdleFantasy - Ironman Companion & Interactive Roadmap</title>
+  <!-- Google Fonts: Inter & Cinzel for Dark Fantasy aesthetic -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tone.js for optional auditory reward feedback -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            fantasy: ['Cinzel', 'serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            iron: {
+              950: '#07090e',
+              900: '#0e121b',
+              850: '#131926',
+              800: '#1b2336',
+              700: '#2c374f',
+              600: '#435373',
+              500: '#5c7299',
+              400: '#8ba1c6',
+              300: '#b8c7e0',
+              200: '#d4e0f0',
+              100: '#f0f4fa',
+            },
+            amberRPG: {
+              400: '#fbbf24',
+              500: '#f59e0b',
+              600: '#d97706',
+            },
+            elder: {
+              400: '#38bdf8',
+              500: '#0ea5e9',
+              600: '#0284c7',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body class="bg-iron-950 text-iron-100 min-h-screen font-sans flex flex-col antialiased selection:bg-amber-500 selection:text-iron-950">
+
+  <!-- Top Persistent Header -->
+  <header class="sticky top-0 z-40 bg-iron-900/95 border-b border-iron-800 backdrop-blur shadow-xl">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      
+      <!-- Brand & Title -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 flex items-center justify-center text-iron-950 font-fantasy font-black text-xl shadow-lg shadow-amber-500/20 border border-amber-300/40 shrink-0">
+          IF
+        </div>
+        <div>
+          <h1 class="font-fantasy font-bold text-lg sm:text-xl tracking-wide text-amber-400 flex items-center gap-2">
+            IdleFantasy <span class="text-[11px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-300 border border-amber-500/30">Ironman Mode</span>
+          </h1>
+          <p class="text-xs text-iron-400 font-medium hidden sm:block">Lộ trình & Sổ tay tương tác cày chay tối ưu</p>
+        </div>
+      </div>
+
+      <!-- Global Progress Indicator -->
+      <div class="flex-1 max-w-md hidden md:flex flex-col gap-1.5 px-4">
+        <div class="flex justify-between items-center text-xs font-medium">
+          <span class="text-iron-300 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span id="headerProgressLabel">Overall Progress / Tiến độ:</span>
+          </span>
+          <div class="flex items-center gap-2">
+            <span id="cloudStatusBadge" class="hidden items-center gap-1 text-[11px] px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-medium">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+              <span>Đã lưu đám mây</span>
+            </span>
+            <span class="font-mono text-amber-400 font-bold" id="headerProgressText">0% (0/0)</span>
+          </div>
+        </div>
+        <div class="w-full bg-iron-950 rounded-full h-2 overflow-hidden border border-iron-800">
+          <div id="headerProgressBar" class="bg-gradient-to-r from-amber-500 via-emerald-400 to-cyan-400 h-full rounded-full transition-all duration-300 w-0"></div>
+        </div>
+      </div>
+
+      <!-- Quick Actions (Sound, Reset, Export/Import) -->
+      <div class="flex items-center gap-2">
+        <!-- Language Switcher: EN / Song Ngữ / VI -->
+        <div class="flex items-center bg-iron-950 p-1 rounded-xl border border-iron-800 text-xs font-semibold mr-1 shadow-inner">
+          <button id="langBtnEn" class="px-2.5 py-1 rounded-lg transition text-iron-400 hover:text-iron-100" title="English only">EN</button>
+          <button id="langBtnBoth" class="px-3 py-1 rounded-lg transition bg-amber-500 text-iron-950 font-bold shadow" title="Song ngữ (Bilingual - EN + VI)">Song Ngữ</button>
+          <button id="langBtnVi" class="px-2.5 py-1 rounded-lg transition text-iron-400 hover:text-iron-100" title="Tiếng Việt thuần">VI</button>
+        </div>
+
+        <!-- Sound FX toggle -->
+        <button id="toggleAudioBtn" title="Bật/Tắt âm thanh thông báo" class="w-9 h-9 rounded-xl bg-iron-850 hover:bg-iron-800 text-iron-300 hover:text-amber-400 border border-iron-700/80 transition flex items-center justify-center">
+          <svg id="soundIconOn" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg>
+          <svg id="soundIconOff" class="w-4 h-4 text-iron-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path></svg>
+        </button>
+
+        <!-- Backup & Restore -->
+        <button id="openBackupBtn" title="Sao lưu / Khôi phục dữ liệu" class="w-9 h-9 rounded-xl bg-iron-850 hover:bg-iron-800 text-iron-300 hover:text-cyan-400 border border-iron-700/80 transition flex items-center justify-center">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+        </button>
+
+        <!-- Vertical Divider -->
+        <div class="h-6 w-px bg-iron-800 my-auto mx-0.5 hidden sm:block"></div>
+
+        <!-- Reset Button (Danger Action Boundary) -->
+        <button id="resetModalBtn" title="Đặt lại toàn bộ tiến độ (Reset)" class="w-9 h-9 rounded-xl bg-iron-900 hover:bg-rose-950/50 text-iron-500 hover:text-rose-400 border border-iron-800 hover:border-rose-800/60 transition flex items-center justify-center">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Mobile Progress Bar Sub-strip -->
+    <div class="md:hidden px-4 py-2 bg-iron-950 border-t border-iron-850 flex items-center justify-between text-xs">
+      <span class="text-iron-400 font-medium">Tiến độ:</span>
+      <span class="font-mono text-amber-400 font-bold" id="mobileProgressText">0%</span>
+      <div class="w-1/2 bg-iron-900 rounded-full h-2 overflow-hidden border border-iron-800">
+        <div id="mobileProgressBar" class="bg-amber-500 h-full w-0 transition-all"></div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full flex flex-col gap-6">
+
+    <!-- View Tabs (Primary Navigation Hierarchy) -->
+    <div class="flex flex-wrap items-center justify-between gap-4 border-b border-iron-800 pb-4">
+      <nav class="flex flex-wrap gap-2" aria-label="Tabs">
+        <button id="tabBtnRoadmap" class="tab-btn px-4 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 text-iron-950 font-bold shadow-md shadow-amber-500/20 border border-amber-400/50">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+          <span id="tabLabelRoadmap">Roadmap / Lộ Trình (9 Phases)</span>
+        </button>
+        <button id="tabBtnRoutine" class="tab-btn px-4 py-2.5 rounded-xl font-medium text-sm transition-all flex items-center gap-2 text-iron-300 hover:text-iron-100 hover:bg-iron-850/80 border border-transparent">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          <span id="tabLabelRoutine">AFK Schedule / Thời Khắc Biểu</span>
+        </button>
+        <button id="tabBtnCalculators" class="tab-btn px-4 py-2.5 rounded-xl font-medium text-sm transition-all flex items-center gap-2 text-iron-300 hover:text-iron-100 hover:bg-iron-850/80 border border-transparent">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+          <span id="tabLabelCalculators">Tools & Checkers / Công Cụ</span>
+        </button>
+        <button id="tabBtnRules" class="tab-btn px-4 py-2.5 rounded-xl font-medium text-sm transition-all flex items-center gap-2 text-iron-300 hover:text-iron-100 hover:bg-iron-850/80 border border-transparent">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+          <span id="tabLabelRules">4 Core Rules / 4 Nguyên Tắc</span>
+        </button>
+      </nav>
+
+      <!-- Expand/Collapse All buttons -->
+      <div id="roadmapControlBar" class="flex items-center gap-2 text-xs">
+        <button id="expandAllBtn" class="px-3 py-2 bg-iron-850 hover:bg-iron-800 text-iron-300 hover:text-iron-100 rounded-lg border border-iron-700/80 font-medium transition">
+          Expand All / Mở rộng
+        </button>
+        <button id="collapseAllBtn" class="px-3 py-2 bg-iron-850 hover:bg-iron-800 text-iron-300 hover:text-iron-100 rounded-lg border border-iron-700/80 font-medium transition">
+          Collapse All / Thu gọn
+        </button>
+      </div>
+    </div>
+
+    <!-- The 4 Core Rules Quick Reference Banner (Collapsible to preserve screen space) -->
+    <div id="coreRulesBanner" class="bg-gradient-to-r from-amber-950/30 via-iron-900 to-iron-900 border border-amber-600/30 rounded-2xl p-4 sm:p-5 relative overflow-hidden shadow-lg transition-all">
+      <!-- Dynamically filled by JavaScript according to language selection -->
+    </div>
+
+    <!-- TAB 1: ROADMAP CHECKLIST VIEW -->
+    <div id="viewRoadmap" class="tab-content space-y-6">
+      
+      <!-- Filter and Search Bar -->
+      <div class="bg-iron-900 border border-iron-800 rounded-2xl p-4 flex flex-col md:flex-row gap-4 items-center justify-between shadow-md">
+        
+        <!-- Search Input -->
+        <div class="relative w-full md:w-80">
+          <input type="text" id="searchInput" placeholder="Tìm kiếm nhiệm vụ, quái, trang bị, công thức..." 
+                 class="w-full bg-iron-950 border border-iron-700/80 rounded-xl pl-10 pr-3.5 py-2.5 text-xs sm:text-sm text-iron-100 placeholder-iron-500 focus:outline-none focus:border-amber-500/80 focus:ring-1 focus:ring-amber-500/50 transition shadow-inner">
+          <svg class="w-4 h-4 text-iron-500 absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        </div>
+
+        <!-- Tag Filters (Secondary Hierarchy Chips) -->
+        <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+          <button data-filter="all" class="filter-btn text-xs px-3 py-1.5 rounded-lg font-semibold bg-iron-800 text-amber-300 border border-amber-500/60 shadow-sm transition">Tất cả</button>
+          <button data-filter="07:00" class="filter-btn text-xs px-3 py-1.5 rounded-lg font-medium bg-iron-900 hover:bg-iron-850 text-iron-300 border border-iron-800 hover:border-iron-700 transition">07:00 Sáng</button>
+          <button data-filter="12:00" class="filter-btn text-xs px-3 py-1.5 rounded-lg font-medium bg-iron-900 hover:bg-iron-850 text-iron-300 border border-iron-800 hover:border-iron-700 transition">Ban ngày</button>
+          <button data-filter="17:00" class="filter-btn text-xs px-3 py-1.5 rounded-lg font-medium bg-iron-900 hover:bg-iron-850 text-iron-300 border border-iron-800 hover:border-iron-700 transition">17:00 Tối</button>
+          <button data-filter="21:00" class="filter-btn text-xs px-3 py-1.5 rounded-lg font-medium bg-iron-900 hover:bg-iron-850 text-iron-300 border border-iron-800 hover:border-iron-700 transition">21:00 Đêm</button>
+          <button data-filter="combat" class="filter-btn text-xs px-3 py-1.5 rounded-lg font-medium bg-iron-900 hover:bg-iron-850 text-rose-300 border border-iron-800 hover:border-iron-700 transition">Combat</button>
+          <button data-filter="agility" class="filter-btn text-xs px-3 py-1.5 rounded-lg font-medium bg-iron-900 hover:bg-iron-850 text-cyan-300 border border-iron-800 hover:border-iron-700 transition">Agility</button>
+          <button data-filter="uncompleted" class="filter-btn text-xs px-3 py-1.5 rounded-lg font-medium bg-iron-900 hover:bg-iron-850 text-amber-300 border border-iron-800 hover:border-iron-700 transition">Chưa xong</button>
+        </div>
+
+      </div>
+
+      <!-- Phases Container -->
+      <div id="phasesList" class="space-y-4">
+        <!-- Rendered via JavaScript -->
+      </div>
+    </div>
+
+    <!-- TAB 2: DAILY ROUTINE (AFK SCHEDULE) -->
+    <div id="viewRoutine" class="tab-content hidden space-y-6">
+      
+      <div class="bg-iron-900 border border-iron-800 rounded-2xl p-6 shadow-md">
+        <h3 class="font-fantasy text-amber-400 font-bold text-lg mb-1.5 flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          Thời Khắc Biểu AFK Hàng Ngày Của Game Thủ Ironman
+        </h3>
+        <p class="text-xs text-iron-300 leading-relaxed max-w-4xl">
+          IdleFantasy vận hành theo chu kỳ kiểm tra hàng đợi (Queue check-ins). Dưới đây là khung giờ vàng tối ưu hóa mỗi ca online trong ngày để không phí phạm một phút cooldown nào.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <!-- 07:00 Morning Card -->
+        <div class="card-frost border border-amber-500/30 rounded-2xl p-6 relative overflow-hidden shadow-lg border-l-4 border-l-amber-500">
+          <div class="flex items-center justify-between mb-4 border-b border-iron-800 pb-3">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-500/20 text-amber-300 font-mono font-bold text-xs border border-amber-500/30">
+              <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+              07:00 SÁNG
+            </span>
+            <span class="text-xs text-iron-400 font-medium">Ca Thu Hoạch & Xếp Lịch Ban Ngày</span>
+          </div>
+          <ul class="space-y-3 text-xs text-iron-200">
+            <li class="flex items-start gap-2.5">
+              <span class="text-amber-400 font-bold">1.</span>
+              <span><strong>Thu hoạch Quests & Dailies:</strong> Nhận 3 nhiệm vụ Daily (2.000 coin/quest hoặc pity mảnh Dwarven gear; guaranteed ở lần 51). Kiểm tra 5 Weekly quests để quay đồ Divine.</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <span class="text-amber-400 font-bold">2.</span>
+              <span><strong>Kiểm tra Survival Badge:</strong> Trước khi xếp quái ban ngày, luôn kiểm tra huy hiệu an toàn để tránh mất 90% đồ.</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <span class="text-amber-400 font-bold">3.</span>
+              <span><strong>Rèn / Nấu lương thực:</strong> Nấu chín thịt Farm dungeon (thịt sống không hồi máu trong combat) hoặc đúc phôi kim loại mới.</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- 07:00 - 12:00 Day Card -->
+        <div class="card-frost border border-cyan-500/30 rounded-2xl p-6 relative overflow-hidden shadow-lg border-l-4 border-l-cyan-500">
+          <div class="flex items-center justify-between mb-4 border-b border-iron-800 pb-3">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-cyan-500/20 text-cyan-300 font-mono font-bold text-xs border border-cyan-500/30">
+              <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+              07:00 – 12:00 TRƯA
+            </span>
+            <span class="text-xs text-iron-400 font-medium">Ca Khai Thác & Chạy Thám Hiểm</span>
+          </div>
+          <ul class="space-y-3 text-xs text-iron-200">
+            <li class="flex items-start gap-2.5">
+              <span class="text-cyan-400 font-bold">1.</span>
+              <span><strong>Mặc định Mining:</strong> Khai thác Copper + Tin (hướng đến mốc 500 bar) hoặc đào Sắt/Than để chuẩn bị phôi Steel.</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <span class="text-cyan-400 font-bold">2.</span>
+              <span><strong>Chạy Thám hiểm (Expeditions):</strong> Xếp 1–2 lượt Crumbling Watchtower (nhặt 5 Lore Notes mở Shadow Den) hoặc 4 Starter Expeditions săn công cụ 2.5×.</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <span class="text-cyan-400 font-bold">3.</span>
+              <span><strong>Chốt đuôi ca làm việc:</strong> Kết thúc bằng Goblin Cave hoặc dungeon an toàn để queue luôn hoạt động.</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- 17:00 Evening Card -->
+        <div class="card-frost border border-emerald-500/30 rounded-2xl p-6 relative overflow-hidden shadow-lg border-l-4 border-l-emerald-500">
+          <div class="flex items-center justify-between mb-4 border-b border-iron-800 pb-3">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 font-mono font-bold text-xs border border-emerald-500/30">
+              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+              17:00 CHIỀU TỐI
+            </span>
+            <span class="text-xs text-iron-400 font-medium">Ca Chạy Agility & Tác Vụ Giám Sát</span>
+          </div>
+          <ul class="space-y-3 text-xs text-iron-200">
+            <li class="flex items-start gap-2.5">
+              <span class="text-emerald-400 font-bold">1.</span>
+              <span><strong>Chạy Agility Courses liên tục:</strong> Chọn khóa học cấp cao nhất hiện mở. Agility giảm thời gian mỗi lượt từ 60 phút xuống 40 phút (và 30 phút sau khi Prestige).</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <span class="text-emerald-400 font-bold">2.</span>
+              <span><strong>Thieving khi thiếu coin:</strong> Móc túi dân làng (Peasants) đầu game lấy 1.500 coin, sau này móc túi lái buôn (Merchants).</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <span class="text-emerald-400 font-bold">3.</span>
+              <span><strong>Luyện Ranged / Magic có giám sát:</strong> Chỉ bắn cung hoặc cast phép khi đang theo dõi màn hình để quản lý tiêu hao mũi tên và rune.</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- 21:00 Overnight Card -->
+        <div class="card-frost border border-indigo-500/30 rounded-2xl p-6 relative overflow-hidden shadow-lg border-l-4 border-l-indigo-500">
+          <div class="flex items-center justify-between mb-4 border-b border-iron-800 pb-3">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-indigo-500/20 text-indigo-300 font-mono font-bold text-xs border border-indigo-500/30">
+              <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
+              21:00 QUA ĐÊM (AFK DÀI)
+            </span>
+            <span class="text-xs text-iron-400 font-medium">Ca An Toàn & Săn Đồ Rơi Tỉ Lệ Thấp</span>
+          </div>
+          <ul class="space-y-3 text-xs text-iron-200">
+            <li class="flex items-start gap-2.5">
+              <span class="text-indigo-400 font-bold">1.</span>
+              <span><strong>Đúc phôi hoặc Nấu ăn số lượng lớn:</strong> Nướng toàn bộ thịt Farm dungeon thành kho lương thực hoặc đúc đinh phục vụ Construction.</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <span class="text-indigo-400 font-bold">2.</span>
+              <span><strong>Dungeon qua đêm an toàn:</strong> Shadow Den ×24 săn Shadow Hook (2%), Farm dungeon khi cạn thức ăn, hoặc Fortress Ruins săn Mithril sword.</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <span class="text-indigo-400 font-bold">3.</span>
+              <span><strong>Ngưỡng ăn máu (Eat Threshold):</strong> Luôn đặt ngưỡng 60–70% và kiểm tra kho thức ăn trước khi đi ngủ!</span>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- TAB 3: CALCULATORS & GEAR CHECKERS -->
+    <div id="viewCalculators" class="tab-content hidden space-y-6">
+
+      <!-- Calculator 1: The Town Project (Construction 40 & Queue Slot 5) -->
+      <div class="card-frost border border-iron-800 rounded-2xl p-6 shadow-lg">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 border-b border-iron-800 pb-4">
+          <div>
+            <h3 class="font-fantasy font-bold text-base sm:text-lg text-amber-400 flex items-center gap-2">
+              <span>🏛️</span> Kế Hoạch Xây Dựng Thị Trấn (The Town Project - Queue Slot 5)
+            </h3>
+            <p class="text-xs text-iron-400 mt-0.5">Theo dõi kho vật liệu cần thiết để chạm mốc Construction 40 mà không phí 1 lượt xây rác.</p>
+          </div>
+          <span class="px-3 py-1 bg-amber-500/20 text-amber-300 font-mono text-xs rounded-lg border border-amber-500/30 font-semibold self-start sm:self-auto">Mở Ô Queue Thứ 5 (+25% Năng Suất)</span>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+          <!-- Item Box -->
+          <div class="bg-iron-850 p-3.5 rounded-xl border border-iron-700/80 text-center">
+            <div class="text-xs text-iron-400 mb-1">Gỗ thường (Logs)</div>
+            <div class="font-mono text-base sm:text-lg font-bold text-amber-400" id="matLogsCount">200</div>
+            <div class="text-[11px] text-iron-400 mt-0.5">Mục tiêu: ~200</div>
+          </div>
+          <div class="bg-iron-850 p-3.5 rounded-xl border border-iron-700/80 text-center">
+            <div class="text-xs text-iron-400 mb-1">Gỗ sồi (Oak logs)</div>
+            <div class="font-mono text-base sm:text-lg font-bold text-amber-400" id="matOakCount">1.200</div>
+            <div class="text-[11px] text-iron-400 mt-0.5">Mục tiêu: ~1.200</div>
+          </div>
+          <div class="bg-iron-850 p-3.5 rounded-xl border border-iron-700/80 text-center">
+            <div class="text-xs text-iron-400 mb-1">Gỗ liễu (Willow)</div>
+            <div class="font-mono text-base sm:text-lg font-bold text-amber-400" id="matWillowCount">100</div>
+            <div class="text-[11px] text-iron-400 mt-0.5">Mục tiêu: ~100</div>
+          </div>
+          <div class="bg-iron-850 p-3.5 rounded-xl border border-iron-700/80 text-center">
+            <div class="text-xs text-iron-400 mb-1">Đá (Stone)</div>
+            <div class="font-mono text-base sm:text-lg font-bold text-amber-400" id="matStoneCount">400</div>
+            <div class="text-[11px] text-iron-400 mt-0.5">Mục tiêu: ~400</div>
+          </div>
+          <div class="bg-iron-850 p-3.5 rounded-xl border border-iron-700/80 text-center">
+            <div class="text-xs text-iron-400 mb-1">Đinh sắt (Iron nails)</div>
+            <div class="font-mono text-base sm:text-lg font-bold text-cyan-400" id="matIronNailsCount">1.650</div>
+            <div class="text-[11px] text-iron-400 mt-0.5">~110 iron bars</div>
+          </div>
+          <div class="bg-iron-850 p-3.5 rounded-xl border border-iron-700/80 text-center">
+            <div class="text-xs text-iron-400 mb-1">Đinh thép (Steel nails)</div>
+            <div class="font-mono text-base sm:text-lg font-bold text-cyan-400" id="matSteelNailsCount">1.300</div>
+            <div class="text-[11px] text-iron-400 mt-0.5">~65 steel bars</div>
+          </div>
+        </div>
+
+        <div class="bg-iron-950 p-4 rounded-xl border border-iron-800 text-xs space-y-2.5">
+          <div class="font-bold text-iron-100">Trình tự 4 công trình mở thẳng Construction 40 (~38.5k XP):</div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-iron-200">
+            <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> 50 wooden racks (3.000 XP)</div>
+            <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> 50 oak tables (12.000 XP)</div>
+            <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> Guild Hall (8.000 XP)</div>
+            <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> Church (10.000 XP)</div>
+          </div>
+          <div class="pt-2 text-amber-300 border-t border-iron-850 leading-relaxed">
+            ⚠️ <strong>Lưu ý:</strong> Xây <em>Queue Master T1</em> (200k coin, 300 oak planks, 100 willow planks, 800 steel nails) và <em>Garden</em> (80k coin). Bỏ qua <em>Inn (Quán trọ)</em> vì chỉ dùng để thuê thợ mà Ironman không thể thuê!
+          </div>
+        </div>
+      </div>
+
+      <!-- Calculator 2: The Dock & Sea Serpent Gear Checker -->
+      <div class="card-frost border border-iron-800 rounded-2xl p-6 shadow-lg">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 border-b border-iron-800 pb-4">
+          <div>
+            <h3 class="font-fantasy font-bold text-base sm:text-lg text-cyan-400 flex items-center gap-2">
+              <span>⛵</span> Điều Kiện Ra Khơi (The Dock & Sea Serpent Gatekeeper)
+            </h3>
+            <p class="text-xs text-iron-400 mt-0.5">Kiểm tra chỉ số và chuẩn bị trang bị tối thiểu để 100% hạ gục Sea Serpent.</p>
+          </div>
+          <span class="px-3 py-1 bg-cyan-500/20 text-cyan-300 font-mono text-xs rounded-lg border border-cyan-500/30 font-semibold self-start sm:self-auto">Cần Construction 90 & Combat 90</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+          
+          <div class="space-y-3 bg-iron-850/80 p-5 rounded-xl border border-iron-700/80">
+            <h4 class="font-bold uppercase tracking-wider text-xs text-amber-400">Chi phí đóng The Dock (Construction 90)</h4>
+            <ul class="space-y-2 text-iron-200">
+              <li class="flex justify-between border-b border-iron-800/80 pb-1.5"><span>Tiền vàng:</span> <span class="font-mono font-bold text-amber-400">~2.750.000 Coins</span></li>
+              <li class="flex justify-between border-b border-iron-800/80 pb-1.5"><span>Ván ma thuật (Magic Planks):</span> <span class="font-mono font-bold text-iron-100">1.100</span></li>
+              <li class="flex justify-between border-b border-iron-800/80 pb-1.5"><span>Ván thủy tùng (Yew Planks):</span> <span class="font-mono font-bold text-iron-100">1.100</span></li>
+              <li class="flex justify-between"><span>Đinh Mithril:</span> <span class="font-mono font-bold text-cyan-400">4.400 (Cần Smithing 55)</span></li>
+            </ul>
+          </div>
+
+          <div class="space-y-3 bg-iron-850/80 p-5 rounded-xl border border-iron-700/80">
+            <h4 class="font-bold uppercase tracking-wider text-xs text-rose-400">Yêu cầu chỉ số chiến đấu hạ Sea Serpent</h4>
+            <ul class="space-y-2 text-iron-200">
+              <li class="flex justify-between border-b border-iron-800/80 pb-1.5"><span>Giáp Phòng Thủ (Armour Defence):</span> <span class="font-mono font-bold text-emerald-400">≥ 370 Defence (Bắt buộc!)</span></li>
+              <li class="flex justify-between border-b border-iron-800/80 pb-1.5"><span>Trang bị tối thiểu:</span> <span class="text-right text-iron-100 font-medium">Abyssal Whip + Tower Helm/Shield + Slayer body/legs</span></li>
+              <li class="flex justify-between border-b border-iron-800/80 pb-1.5"><span>Lương thực dự trữ:</span> <span class="font-mono font-bold text-cyan-300">~160 Cá mập (Shark)</span></li>
+              <li class="flex justify-between"><span>Thời gian giao tranh:</span> <span class="font-mono font-bold text-iron-300">~25 phút</span></li>
+            </ul>
+          </div>
+
+        </div>
+
+        <div class="mt-4 p-4 rounded-xl bg-rose-950/30 border border-rose-800/50 text-rose-300 text-xs leading-relaxed">
+          🚨 <strong>CẢNH BÁO SỐNG CÒN TRƯỚC KHI NHỔ NEO:</strong> Khi bạn bước lên Đảo Elder, toàn bộ hoạt động ở đất liền sẽ tạm dừng. Bạn <strong>KHÔNG THỂ NHỔ NEO</strong> nếu còn bất kỳ phiên làm việc nào (dù đã hoàn thành) đang chờ bấm nút nhận thưởng (Claim)!
+        </div>
+      </div>
+
+      <!-- Calculator 3: Elder Isle Sprint Tracker -->
+      <div class="card-frost border border-iron-800 rounded-2xl p-6 shadow-lg">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 border-b border-iron-800 pb-4">
+          <div>
+            <h3 class="font-fantasy font-bold text-base sm:text-lg text-elder-400 flex items-center gap-2">
+              <span>💎</span> Chiến Dịch Đảo Elder (8 Elder Pieces + Sapphire Sockets)
+            </h3>
+            <p class="text-xs text-iron-400 mt-0.5">Mục tiêu tối thượng: Kích hoạt vĩnh viễn mốc +40% XP cho toàn bộ thế giới đất liền.</p>
+          </div>
+          <span class="px-3 py-1 bg-elder-500/20 text-elder-300 font-mono text-xs rounded-lg border border-elder-500/30 font-semibold self-start sm:self-auto">+40% XP Vĩnh Viễn</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+          <div class="bg-iron-850 p-4 rounded-xl border border-iron-700/80">
+            <div class="text-iron-400 mb-1.5">Sigils cần thu thập</div>
+            <div class="font-mono text-xl sm:text-2xl font-bold text-elder-400">40 Sigils</div>
+            <div class="text-[11px] text-iron-400 mt-1">5 Sigils / 1 món Elder (Farm Abyssal Depths cấp 85)</div>
+          </div>
+          <div class="bg-iron-850 p-4 rounded-xl border border-iron-700/80">
+            <div class="text-iron-400 mb-1.5">Essence cần đổi ngọc</div>
+            <div class="font-mono text-xl sm:text-2xl font-bold text-cyan-400">2.400 Essence</div>
+            <div class="text-[11px] text-iron-400 mt-1">300 Essence / 1 viên Sapphire (Cần 8 viên)</div>
+          </div>
+          <div class="bg-iron-850 p-4 rounded-xl border border-iron-700/80">
+            <div class="text-iron-400 mb-1.5">Lương thực tối ưu</div>
+            <div class="font-mono text-xl sm:text-2xl font-bold text-amber-400">Lavafin (Hồi 26 máu)</div>
+            <div class="text-[11px] text-iron-400 mt-1">Fish + Cook cấp 60 (~13 session)</div>
+          </div>
+        </div>
+
+        <div class="mt-4 p-4 rounded-xl bg-amber-950/30 border border-amber-800/50 text-amber-300 text-xs leading-relaxed">
+          ⚠️ <strong>QUY TẮC RÈN ĐỒ ELDER:</strong> Bắt buộc phải rèn trực tiếp (Live Crafting) khi bạn đang online. Nếu đưa vào hàng đợi (Queue) mà bị xịt, bạn sẽ <strong>MẤT TRẮNG 5 SIGILS</strong> quý giá!
+        </div>
+      </div>
+
+    </div>
+
+    <!-- TAB 4: MECHANICS & DEEP GUIDE -->
+    <div id="viewRules" class="tab-content hidden space-y-6">
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <!-- Mechanic: Dying Forward -->
+        <div class="card-frost border border-iron-800 rounded-2xl p-6 shadow-lg space-y-3">
+          <h3 class="font-fantasy font-bold text-amber-400 text-base sm:text-lg flex items-center gap-2">
+            <span>💀</span> Chiến Thuật "Chết Để Tiến Lên" (Dying Forward)
+          </h3>
+          <p class="text-xs text-iron-200 leading-relaxed">
+            Trên đất liền, chết trong dungeon sẽ khiến bạn mất đến 90% XP và đồ rơi. Nhưng trên <strong>Đảo Elder</strong>, cơ chế hoàn toàn ngược lại:
+          </p>
+          <div class="bg-iron-950 p-4 rounded-xl border border-iron-800 text-xs space-y-2 text-iron-200">
+            <div class="text-emerald-400 font-bold">Quy tắc đảo:</div>
+            <p>• Chết trên đảo <strong>không bị phạt mất đồ hay trừ XP</strong>.</p>
+            <p>• Khi mới lên đảo (Cấp 1): Đi Beach & Cliffs mà <strong>không mang thức ăn</strong>.</p>
+            <p>• Cứ đánh hết sức cho đến khi gục ngã, bạn vẫn nhận 100% XP từ các quái đã diệt được.</p>
+            <p>• Mất khoảng 8 lượt như vậy để chạm mốc 60, và 19 lượt để chạm mốc 85!</p>
+          </div>
+        </div>
+
+        <!-- Mechanic: Agility Laps Math -->
+        <div class="card-frost border border-iron-800 rounded-2xl p-6 shadow-lg space-y-3">
+          <h3 class="font-fantasy font-bold text-cyan-400 text-base sm:text-lg flex items-center gap-2">
+            <span>🏃</span> Toán Học Tốc Độ & Grappling Hook (Agility)
+          </h3>
+          <p class="text-xs text-iron-200 leading-relaxed">
+            Móc leo tường (Hook) quyết định trực tiếp số vòng chạy mỗi phút và lượng XP nhận được:
+          </p>
+          <div class="bg-iron-950 p-4 rounded-xl border border-iron-800 text-xs space-y-1.5 text-iron-200 font-mono">
+            <div class="flex justify-between py-1 border-b border-iron-850">
+              <span class="text-iron-400">Không có móc:</span>
+              <span class="text-iron-100">2 vòng / phút (Mặc định)</span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-iron-850">
+              <span class="text-iron-400">Iron Hook:</span>
+              <span class="text-amber-400 font-bold">3 vòng / phút (+50% Agility XP)</span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-iron-850">
+              <span class="text-iron-400">Shadow Hook:</span>
+              <span class="text-cyan-400 font-bold">5 vòng / phút (+150% XP, cày lên 99)</span>
+            </div>
+            <div class="flex justify-between py-1">
+              <span class="text-iron-400">Steel Hook:</span>
+              <span class="text-rose-400">Bỏ qua! (Tốc độ bằng Iron Hook)</span>
+            </div>
+          </div>
+          <p class="text-xs text-iron-400 italic">
+            *Ở Agility 99, thời gian 1 lượt hạ từ 60 phút xuống 40 phút. Sau 3 lần Prestige, đạt sàn tuyệt đối là ~28 phút.
+          </p>
+        </div>
+
+        <!-- Mechanic: Survival Badge & Combat Split -->
+        <div class="card-frost border border-iron-800 rounded-2xl p-6 shadow-lg space-y-3">
+          <h3 class="font-fantasy font-bold text-rose-400 text-base sm:text-lg flex items-center gap-2">
+            <span>🛡️</span> Cơ Chế Huy Hiệu Sống Sót & Tỉ Lệ Chia XP Combat
+          </h3>
+          <ul class="text-xs space-y-2.5 text-iron-200">
+            <li class="flex items-start gap-2">
+              <span class="text-rose-400 font-bold">•</span>
+              <span><strong>Huy hiệu Survival:</strong> Nếu chạy dungeon mà chết, bạn không nhận được tiến độ nhiệm vụ và chỉ giữ lại đúng 10% XP/loot.</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-rose-400 font-bold">•</span>
+              <span><strong>Tự động chia điểm XP Combat:</strong> Combat XP tự động chia theo tỉ lệ <strong>70%</strong> cho kỹ năng vũ khí (Attack hoặc Strength), <strong>15%</strong> cho HP, và <strong>15%</strong> cho Defence.</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-rose-400 font-bold">•</span>
+              <span><strong>Phước lành (Blessings):</strong> Người chơi Ironman chỉ có thể sử dụng Phước lành phòng thủ (Defence blessings).</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Mechanic: Tools Multiplier -->
+        <div class="card-frost border border-iron-800 rounded-2xl p-6 shadow-lg space-y-3">
+          <h3 class="font-fantasy font-bold text-amber-400 text-base sm:text-lg flex items-center gap-2">
+            <span>⛏️</span> Hệ Số Nhân Của Dòng Công Cụ (Tools Multiplier)
+          </h3>
+          <div class="bg-iron-950 p-4 rounded-xl border border-iron-800 text-xs space-y-2 text-iron-200 font-mono">
+            <div class="flex justify-between"><span>Bronze Tools:</span> <span class="text-rose-400 font-bold">1.0× (Rác, đừng chế!)</span></div>
+            <div class="flex justify-between"><span>Iron Tools:</span> <span class="text-iron-300">1.25×</span></div>
+            <div class="flex justify-between"><span>Steel Tools:</span> <span class="text-amber-400 font-bold">1.5× sản lượng & XP</span></div>
+            <div class="flex justify-between"><span>Dungeon Tools (Deep Iron, etc.):</span> <span class="text-cyan-400 font-bold">2.5×</span></div>
+            <div class="flex justify-between"><span>Level 40 Tools:</span> <span class="text-indigo-400">3.25× (Tỉ lệ rớt 1/500, bỏ qua)</span></div>
+            <div class="flex justify-between"><span>Divine Tools (Endgame):</span> <span class="text-emerald-400 font-bold">3.5× (Quay từ 5 weekly)</span></div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Toast Notification System -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Backup & Restore Modal -->
+  <div id="backupModal" class="fixed inset-0 z-50 bg-iron-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-iron-900 border border-iron-700 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-iron-800 pb-3">
+        <h3 class="font-fantasy font-bold text-amber-400 text-base sm:text-lg flex items-center gap-2">
+          <span>💾</span> Sao Lưu & Khôi Phục Tiến Độ
+        </h3>
+        <button id="closeBackupBtn" class="w-8 h-8 rounded-lg text-iron-400 hover:text-iron-100 hover:bg-iron-800 flex items-center justify-center transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <p class="text-xs text-iron-300 leading-relaxed">
+        Bạn có thể sao chép chuỗi mã hóa JSON bên dưới để lưu trữ hoặc dán mã từ thiết bị khác để đồng bộ tiến trình cày game.
+      </p>
+
+      <div class="p-3 rounded-xl bg-iron-950 border border-iron-800 text-xs text-iron-400 flex flex-col gap-1">
+        <span class="text-iron-300 font-medium">Tài khoản lưu trữ đám mây của bạn (User ID):</span>
+        <span id="displayUserId" class="font-mono text-cyan-400 select-all break-all">Đang kết nối...</span>
+      </div>
+
+      <textarea id="backupTextarea" class="w-full h-32 bg-iron-950 border border-iron-800 rounded-xl p-3.5 font-mono text-xs text-iron-200 focus:outline-none focus:border-amber-500/80" placeholder="Dữ liệu sao lưu dạng JSON..."></textarea>
+
+      <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+        <button id="copyBackupBtn" class="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-iron-950 font-bold rounded-xl text-xs transition flex items-center gap-2 shadow-sm">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+          Sao chép dữ liệu
+        </button>
+        <div class="flex items-center gap-2">
+          <button id="importBackupBtn" class="px-4 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl text-xs transition shadow-sm">
+            Khôi phục (Import)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reset Confirmation Modal -->
+  <div id="resetModal" class="fixed inset-0 z-50 bg-iron-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-iron-900 border border-rose-800/60 rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center gap-3 text-rose-400">
+        <div class="w-10 h-10 rounded-full bg-rose-500/20 flex items-center justify-center shrink-0">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+        </div>
+        <div>
+          <h3 class="font-bold text-sm text-iron-100">Đặt Lại Toàn Bộ Tiến Độ?</h3>
+          <p class="text-xs text-iron-400">Thao tác này sẽ xóa sạch các ô đã tick.</p>
+        </div>
+      </div>
+
+      <p class="text-xs text-iron-300 leading-relaxed">
+        Bạn có chắc muốn xóa toàn bộ đánh dấu hoàn thành không? Tiến trình sẽ trở về trạng thái Ngày 1 (Day 1).
+      </p>
+
+      <div class="flex items-center justify-end gap-3 pt-2">
+        <button id="cancelResetBtn" class="px-4 py-2 rounded-xl text-xs font-semibold bg-iron-800 text-iron-300 hover:bg-iron-700 transition">
+          Hủy bỏ
+        </button>
+        <button id="confirmResetBtn" class="px-4 py-2 rounded-xl text-xs bg-rose-600 hover:bg-rose-500 text-white font-bold transition shadow-sm">
+          Xác nhận xóa
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>

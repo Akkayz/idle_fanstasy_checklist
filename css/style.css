@@ -1,0 +1,42 @@
+/* ==========================================================================
+   IdleFantasy Ironman Companion - Custom Styles
+   ========================================================================== */
+
+/* Custom scrollbar and smooth transitions */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0e121b;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2c374f;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #435373;
+}
+
+/* Dark Fantasy Visual Accents */
+.badge-glow {
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.25);
+}
+
+.card-frost {
+  background: rgba(19, 25, 38, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+input[type="checkbox"] {
+  cursor: pointer;
+}
+
+/* Mobile & Touch Ergonomics */
+.touch-manipulation {
+  touch-action: manipulation;
+}

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Outer Shield Crest -->
+  <path d="M32 4L10 13V29C10 45 32 60 32 60C32 60 54 45 54 29V13L32 4Z" fill="#0e121b" stroke="#f59e0b" stroke-width="2.5" stroke-linejoin="round"/>
+  <!-- Inner Shield Layer -->
+  <path d="M32 10L16 17V29C16 41 32 52 32 52C32 52 48 41 48 29V17L32 10Z" fill="#1b2336" stroke="#2c374f" stroke-width="1.5" stroke-linejoin="round"/>
+  <!-- Central Rune Sword -->
+  <path d="M32 16V44M25 24H39M29 44H35M32 44V47" stroke="#fbbf24" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Glowing Center Gem -->
+  <circle cx="32" cy="24" r="2.5" fill="#f59e0b"/>
+</svg>
